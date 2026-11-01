@@ -19,7 +19,7 @@ and cached for the session, so a re-execute does not re-download the hub.
 | `loader.luau` | entry point, resolves remote modules |
 | `src/Main.luau` | hub runtime, licence gate, tab registry |
 | `src/tabs/*.luau` | one module per sidebar tab |
-| `languages/*.luau` | locale bundles, 9 languages |
+| `languages/*.luau` | locale bundles, 10 languages (en, he, es, pt, fr, de, tr, id, ru, ar) |
 | `themes/Themes.luau` | WindUI theme pack |
 | `debug/run-hub.luau` | developer runner with a full traceback |
 
