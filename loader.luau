@@ -24,10 +24,15 @@ do
 		end)
 	end
 	do
-		-- Version pin. A bare global erison (or version / EnderVersion /
-		-- EnderCommit) set to a commit hash makes this file fetch that commit's
-		-- loader.luau and run it instead of the payload baked in below. No pin
-		-- means the baked payload, which is always the latest build.
+		-- Version pin, Voidware style. A bare global erison (or version /
+		-- EnderVersion / EnderCommit / CustomCommit, on the chunk env, getgenv,
+		-- _G or shared) set to a full or short commit hash makes this file fetch
+		-- that commit's loader.luau and run it instead of the payload baked in
+		-- below. Empty string, nil, main, latest and off all mean the baked
+		-- payload, which is always the latest build.
+		--
+		--   verison = "974d3a517bb286df7c2142f3f57a179fc12144da"
+		--   shared.CustomCommit = "974d3a517bb286df7c2142f3f57a179fc12144da"
 		--
 		-- A bare assignment does not land in getgenv() on every executor: it lands
 		-- in the chunk environment, which is getfenv(1) here because loadstring
@@ -57,7 +62,7 @@ do
 		local __pin = nil
 		for _, __t in next, __scans do
 			if __pin == nil then
-				for _, __k in next, { "verison", "version", "EnderVersion", "EnderCommit" } do
+				for _, __k in next, { "verison", "version", "EnderVersion", "EnderCommit", "CustomCommit" } do
 					local __v = rawget(__t, __k)
 					if type(__v) == "string" and __v ~= "" then
 						local __low = string.lower(__v)
@@ -87,7 +92,10 @@ do
 					pcall(function() __run = loadstring(__src) end)
 				end
 				if __run then
-					__run()
+					pcall(__run)
+					for _, __t in next, __scans do
+						pcall(function() rawset(__t, "__EnderPinned", nil) end)
+					end
 					return
 				end
 				for _, __t in next, __scans do
