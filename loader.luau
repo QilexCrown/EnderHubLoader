@@ -76,7 +76,7 @@ do
 				local __m = rawget(__t, "__EnderPinned")
 				if __m ~= nil then __held = __m; break end
 			end
-			if __held == nil then
+			if __held == nil or __held ~= __pin then
 				for _, __t in next, __scans do
 					pcall(function() rawset(__t, "__EnderPinned", __pin) end)
 				end
