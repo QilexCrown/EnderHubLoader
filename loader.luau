@@ -24,36 +24,62 @@ do
 		end)
 	end
 	do
-		-- Version pin. Setting getgenv().verison (or version / EnderVersion /
-		-- EnderCommit) to a commit hash makes this file fetch that commit's
+		-- Version pin. A bare global erison (or version / EnderVersion /
+		-- EnderCommit) set to a commit hash makes this file fetch that commit's
 		-- loader.luau and run it instead of the payload baked in below. No pin
-		-- means the baked payload, which is always the latest build. The marker
-		-- stops a pinned loader that carries this same block from pinning again.
-		local __pin = nil
+		-- means the baked payload, which is always the latest build.
+		--
+		-- A bare assignment does not land in getgenv() on every executor: it lands
+		-- in the chunk environment, which is getfenv(1) here because loadstring
+		-- inherits the caller's environment. So the scan covers the chunk env and
+		-- its parents alongside the usual globals. The marker is written to every
+		-- env scanned so a pinned loader carrying this block cannot pin itself.
+		local __scans = {}
+		local function __addEnv(__t)
+			if type(__t) ~= "table" then return end
+			for _, __seen in next, __scans do
+				if __seen == __t then return end
+			end
+			table.insert(__scans, __t)
+		end
+		pcall(function() if type(getgenv) == "function" then __addEnv(getgenv()) end end)
+		pcall(function() __addEnv(_G) end)
+		pcall(function() __addEnv(shared) end)
+		pcall(function() if type(getrenv) == "function" then __addEnv(getrenv()) end end)
 		pcall(function()
-			local __gens = nil
-			if type(getgenv) == "function" then __gens = getgenv() end
-			for _, __t in next, { __gens, _G, shared } do
-				if __pin == nil and type(__t) == "table" then
-					for _, __k in next, { "verison", "version", "EnderVersion", "EnderCommit" } do
-						local __v = rawget(__t, __k)
-						if type(__v) == "string" and __v ~= "" then
-							local __low = string.lower(__v)
-							if __low ~= "main" and __low ~= "latest" and __low ~= "off" then
-								__pin = __v
-								break
-							end
+			if type(getfenv) ~= "function" then return end
+			for __lvl = 0, 4 do
+				local __eok, __eenv = pcall(getfenv, __lvl)
+				if __eok then __addEnv(__eenv) end
+			end
+		end)
+
+		local __pin = nil
+		for _, __t in next, __scans do
+			if __pin == nil then
+				for _, __k in next, { "verison", "version", "EnderVersion", "EnderCommit" } do
+					local __v = rawget(__t, __k)
+					if type(__v) == "string" and __v ~= "" then
+						local __low = string.lower(__v)
+						if __low ~= "main" and __low ~= "latest" and __low ~= "off" then
+							__pin = __v
+							break
 						end
 					end
 				end
 			end
-		end)
+		end
+
 		if __pin then
-			local __genv = nil
-			pcall(function() __genv = getgenv() end)
-			__genv = __genv or _G
-			if rawget(__genv, "__EnderPinned") == nil then
-				rawset(__genv, "__EnderPinned", __pin)
+			local __held = nil
+			for _, __t in next, __scans do
+				local __m = rawget(__t, "__EnderPinned")
+				if __m ~= nil then __held = __m; break end
+			end
+			if __held == nil then
+				for _, __t in next, __scans do
+					pcall(function() rawset(__t, "__EnderPinned", __pin) end)
+				end
 				local __url = "https://raw.githubusercontent.com/QilexCrown/EnderHubLoader/" .. __pin .. "/loader.luau"
 				local __ok, __src = pcall(function() return game:HttpGet(__url) end)
 				local __run = nil
@@ -64,8 +90,12 @@ do
 					__run()
 					return
 				end
-				rawset(__genv, "__EnderPinned", nil)
-				rawset(__genv, "__EnderPinMiss", tostring(__pin))
+				for _, __t in next, __scans do
+					pcall(function()
+						rawset(__t, "__EnderPinned", nil)
+						rawset(__t, "__EnderPinMiss", tostring(__pin))
+					end)
+				end
 			end
 		end
 	end
