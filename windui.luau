@@ -1020,18 +1020,30 @@ function Creator.Translate(Value)
 	end
 	return Value
 end
+Creator.AfterLanguageChange = Creator.AfterLanguageChange or {}
+
 function Creator.UpdateLang(newLang)
 	if newLang then
 		Creator.Language = newLang
 	end
 
-	for i = 1, #Creator.LocalizationObjects do
-		local data = Creator.LocalizationObjects[i]
-		if data.Object and data.Object.Parent ~= nil then
-			Creator.SetLangForObject(i)
-		else
-			Creator.LocalizationObjects[i] = nil
+	local Objects = Creator.LocalizationObjects
+	local Write = 1
+	for Read = 1, #Objects do
+		local data = Objects[Read]
+		local Object = data and data.Object
+		if Object and Object.Parent ~= nil then
+			pcall(Creator.SetLangForObject, Read)
+			Objects[Write] = data
+			Write = Write + 1
 		end
+	end
+	for i = Write, #Objects do
+		Objects[i] = nil
+	end
+
+	for _, Hook in ipairs(Creator.AfterLanguageChange) do
+		pcall(Hook)
 	end
 end
 
@@ -26295,7 +26307,7 @@ return function(Creator)
 		BackgroundTransparency = 0,
 		Hover = "Text",
 
-		PanelBackground = "Background",
+		PanelBackground = "White",
 		PanelBackgroundTransparency = 0.95,
 
 		WindowBackground = "Background",
@@ -26389,7 +26401,7 @@ return function(Creator)
 
 		Notification = "Background",
 		Notification2 = "White",
-		Notification2Transparency = 0.92,
+		Notification2Transparency = 1,
 		NotificationTitle = "Text",
 		NotificationTitleTransparency = 0,
 		NotificationContent = "Text",
@@ -39713,7 +39725,7 @@ local Creator = require("src/modules/Creator.lua")
 local New = Creator.New
 local Tween = Creator.Tween
 
-local TabBackgroundTransparency = 0.67
+local TabBackgroundTransparency = 0.95
 
 function DropdownMenu.New(Config, Dropdown, Element, Type)
 	local DropdownModule = {}
@@ -39795,7 +39807,7 @@ function DropdownMenu.New(Config, Dropdown, Element, Type)
 	end
 
 	local function RecalculateListSize()
-		local MaxHeight = Config.WindUI.DropdownGui.AbsoluteSize.Y
+		local MaxHeight = CurrentCamera.ViewportSize.Y * 0.6
 
 		local ContentY = Dropdown.UIElements.UIListLayout.AbsoluteContentSize.Y / Config.UIScale
 		local SearchBarOffset = Dropdown.SearchBarEnabled and (Element.SearchBarHeight + (Element.MenuPadding * 3))
@@ -39870,6 +39882,14 @@ function DropdownMenu.New(Config, Dropdown, Element, Type)
 		end
 	end
 
+	Creator.AfterLanguageChange = Creator.AfterLanguageChange or {}
+	table.insert(Creator.AfterLanguageChange, function()
+		if Config.Window.Destroyed then
+			return
+		end
+		DropdownModule:Display()
+	end)
+
 	local function Callback(customCallback)
 		DropdownModule:Display()
 		if Dropdown.Locked then
@@ -39912,7 +39932,7 @@ function DropdownMenu.New(Config, Dropdown, Element, Type)
 
 				if isLocked then
 					Tween(tab.UIElements.TabItem, 0.1, { ImageTransparency = 1 }):Play()
-					--Tween(tab.UIElements.TabItem.Highlight, 0.1, { ImageTransparency = 1 }):Play()
+					Tween(tab.UIElements.TabItem.Highlight, 0.1, { ImageTransparency = 1 }):Play()
 					Tween(tab.UIElements.TabItem.Frame.Title.TextLabel, 0.1, { TextTransparency = 0.6 }):Play()
 					if tab.UIElements.TabIcon then
 						Tween(tab.UIElements.TabIcon.ImageLabel, 0.1, { ImageTransparency = 0.6 }):Play()
@@ -39923,14 +39943,14 @@ function DropdownMenu.New(Config, Dropdown, Element, Type)
 				else
 					if tab.Selected then
 						Tween(tab.UIElements.TabItem, 0.1, { ImageTransparency = TabBackgroundTransparency }):Play()
-						--Tween(tab.UIElements.TabItem.Highlight, 0.1, { ImageTransparency = 0.75 }):Play()
+						Tween(tab.UIElements.TabItem.Highlight, 0.1, { ImageTransparency = 0.75 }):Play()
 						Tween(tab.UIElements.TabItem.Frame.Title.TextLabel, 0.1, { TextTransparency = 0 }):Play()
 						if tab.UIElements.TabIcon then
 							Tween(tab.UIElements.TabIcon.ImageLabel, 0.1, { ImageTransparency = 0 }):Play()
 						end
 					else
 						Tween(tab.UIElements.TabItem, 0.1, { ImageTransparency = 1 }):Play()
-						--Tween(tab.UIElements.TabItem.Highlight, 0.1, { ImageTransparency = 1 }):Play()
+						Tween(tab.UIElements.TabItem.Highlight, 0.1, { ImageTransparency = 1 }):Play()
 						Tween(
 							tab.UIElements.TabItem.Frame.Title.TextLabel,
 							0.1,
@@ -40012,10 +40032,7 @@ function DropdownMenu.New(Config, Dropdown, Element, Type)
 						AutomaticSize = TabMain.Desc and "Y",
 						ImageTransparency = 1, -- 0
 						Parent = Dropdown.UIElements.Menu.Frame.ScrollingFrame,
-						--ImageColor3 = Color3.new(1, 1, 1),
-						ThemeTag = {
-							ImageColor3 = "DropdownTabBackground",
-						},
+						ImageColor3 = Color3.new(1, 1, 1),
 						Active = not TabMain.Locked,
 					},
 					{
@@ -40149,7 +40166,7 @@ function DropdownMenu.New(Config, Dropdown, Element, Type)
 
 				if TabMain.Selected and not TabMain.Locked then
 					TabMain.UIElements.TabItem.ImageTransparency = TabBackgroundTransparency
-					--TabMain.UIElements.TabItem.Highlight.ImageTransparency = 0.75
+					TabMain.UIElements.TabItem.Highlight.ImageTransparency = 0.75
 					TabMain.UIElements.TabItem.Frame.Title.TextLabel.TextTransparency = 0
 					if TabMain.UIElements.TabIcon then
 						TabMain.UIElements.TabIcon.ImageLabel.ImageTransparency = 0
@@ -43249,21 +43266,17 @@ function SearchBar.new(TabModule, Parent, OnClose)
 			Scale = 0.9, -- 1
 		}),
 		SearchFrame,
-		--[[Creator.NewRoundFrame(SearchBarModule.Radius, "SquircleGlass", {
-			Size = UDim2.new(1, 4, 1, 4),
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			Position = UDim2.new(0.5, 0, 0.5, 0),
+		Creator.NewRoundFrame(SearchBarModule.Radius, "Glass-0.7", {
+			Size = UDim2.new(1, 0, 1, 0),
 			BackgroundTransparency = 1,
-			ImageTransparency = 1,
 			--AutomaticSize = "Y",
 			--Visible = false,
-			--[ThemeTag = {
+			ThemeTag = {
 				ImageColor3 = "SearchBarBorder",
 				ImageTransparency = "SearchBarBorderTransparency",
-			},]
+			},
 			Name = "Outline",
 		}),
-		]]
 	})
 
 	local function CreateSearchTab(Title, Desc, Icon, Parent, IsParent, Callback)
@@ -43621,5 +43634,5 @@ return { -- lucide
 }
 end
 
--- enderhub-windui-166-dialog63-tr
+-- enderhub-windui-163-visual
 return __require("src/Init.lua")
