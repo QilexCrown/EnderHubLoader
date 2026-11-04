@@ -996,6 +996,30 @@ function Creator:ChangeTranslationKey(object, newKey)
 	end
 end
 
+function Creator.Translate(Value)
+	local Localization = Creator.Localization
+	if not Localization or not Localization.Enabled or type(Value) ~= "string" then
+		return Value
+	end
+	local Prefix = Localization.Prefix or "loc:"
+	local Id = string.match(Value, "^" .. Prefix .. "(.+)")
+	if not Id then
+		return Value
+	end
+	local Translations = Localization.Translations
+	if not Translations then
+		return Value
+	end
+	local Active = Translations[Creator.Language]
+	if Active and Active[Id] then
+		return Active[Id]
+	end
+	local English = Translations.en
+	if English and English[Id] then
+		return English[Id]
+	end
+	return Value
+end
 function Creator.UpdateLang(newLang)
 	if newLang then
 		Creator.Language = newLang
@@ -39842,7 +39866,7 @@ function DropdownMenu.New(Config, Dropdown, Element, Type)
 		end
 
 		if Dropdown.UIElements.Dropdown then
-			Dropdown.UIElements.Dropdown.Frame.Frame.TextLabel.Text = (Str == "" and "--" or Str)
+			Dropdown.UIElements.Dropdown.Frame.Frame.TextLabel.Text = (Str == "" and "--" or Creator.Translate(Str))
 		end
 	end
 
@@ -43597,5 +43621,5 @@ return { -- lucide
 }
 end
 
--- enderhub-windui-166-dialog63
+-- enderhub-windui-166-dialog63-tr
 return __require("src/Init.lua")
