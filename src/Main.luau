@@ -5550,6 +5550,7 @@ __modules["src/elements/Customize.lua"] = function(require)
 	local Creator = require("src/modules/Creator.lua")
 	local New = Creator.New
 	local RunService = game:GetService("RunService")
+	local UserInputService = game:GetService("UserInputService")
 
 	local Element = {}
 
@@ -5562,7 +5563,11 @@ __modules["src/elements/Customize.lua"] = function(require)
 	local FEET_Y = -0.25
 	local HEAD_TOP_Y = 5.0
 	local CENTRE_Y = (HEAD_TOP_Y + FEET_Y) * 0.5
-	local SHOULDER_X = 1.6
+
+	-- Drags are stored in screen pixels, so the same clamp is the useful range
+	-- for the preview and for the real overlay.
+	local DRAG_LIMIT = 240
+	local HINT = Color3.fromRGB(120, 170, 255)
 
 	local function part(model, name, size, cframe, color)
 		return New("Part", {
@@ -5601,7 +5606,9 @@ __modules["src/elements/Customize.lua"] = function(require)
 			Title = Config.Title or "Customize",
 			Desc = Config.Desc,
 			Mode = Config.Mode or "ESP",
-			Height = Config.Height or 210,
+			Height = Config.Height or 190,
+			Aspect = Config.Aspect or 0.45,
+			Open = false,
 			ESP = {
 				Box = true,
 				BoxColor = Color3.fromRGB(255, 255, 255),
@@ -5610,6 +5617,15 @@ __modules["src/elements/Customize.lua"] = function(require)
 				Distance = true,
 				TextSide = "Above",
 				TextSize = 13,
+				Scale = 1,
+				Fill = 0,
+				Thickness = 1,
+				Brackets = true,
+				Health = false,
+				Tracer = false,
+				BoxOffset = Vector2.new(0, 0),
+				NameOffset = Vector2.new(0, 0),
+				DistanceOffset = Vector2.new(0, 0),
 			},
 			Cursor = {
 				Preset = "Star of David",
@@ -5617,8 +5633,11 @@ __modules["src/elements/Customize.lua"] = function(require)
 				Size = 26,
 				Spin = false,
 				Speed = 60,
+				Thickness = 0.13,
+				Offset = Vector2.new(0, 0),
 			},
 			CursorDraw = Config.CursorDraw,
+			OnChange = Config.OnChange,
 			UIElements = {},
 			Dead = false,
 			Angle = 0,
@@ -5649,19 +5668,83 @@ __modules["src/elements/Customize.lua"] = function(require)
 		Customize.CustomizeFrame = Frame
 
 		local corner = UDim.new(0, Config.Window.ElementConfig.UICorner)
+		local container = Frame.UIElements.Container
 
-		-- Mode switch sits above the preview so nothing is drawn over the rig.
+		-- ============================================================ header
+		-- The header is the whole click target while the card is closed, so the
+		-- card opens from anywhere on its face instead of a tiny chevron.
+		local header = New("Frame", {
+			Name = "Header",
+			Size = UDim2.new(1, 0, 0, 26),
+			BackgroundTransparency = 1,
+			Parent = container,
+		})
+
+		local hit = New("TextButton", {
+			Name = "Hit",
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			AutoButtonColor = false,
+			Parent = header,
+		})
+
 		local modesRow = New("Frame", {
 			Name = "Modes",
-			Size = UDim2.new(1, 0, 0, 24),
+			Size = UDim2.new(0, 128, 1, 0),
 			BackgroundTransparency = 1,
-			Parent = Frame.UIElements.Container,
+			ZIndex = 3,
+			Parent = header,
 		}, {
 			New("UIListLayout", {
 				FillDirection = Enum.FillDirection.Horizontal,
 				Padding = UDim.new(0, 4),
-				HorizontalAlignment = Enum.HorizontalAlignment.Center,
+				HorizontalAlignment = Enum.HorizontalAlignment.Left,
 				VerticalAlignment = Enum.VerticalAlignment.Center,
+			}),
+		})
+
+		local chevron = New("TextButton", {
+			Name = "Chevron",
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.fromScale(1, 0.5),
+			Size = UDim2.fromOffset(22, 22),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			BackgroundTransparency = 0.92,
+			Text = "",
+			AutoButtonColor = false,
+			ZIndex = 3,
+			Parent = header,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
+		})
+
+		local chevronBars = {}
+		for index = 1, 2 do
+			chevronBars[index] = New("Frame", {
+				Name = "Bar" .. index,
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = UDim2.fromOffset(7, 1.5),
+				BackgroundColor3 = Color3.new(1, 1, 1),
+				BorderSizePixel = 0,
+				Parent = chevron,
+			})
+		end
+
+		-- ============================================================== body
+		local body = New("Frame", {
+			Name = "Body",
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = "Y",
+			BackgroundTransparency = 1,
+			Visible = false,
+			Parent = container,
+		}, {
+			New("UIListLayout", {
+				Padding = UDim.new(0, 6),
+				FillDirection = "Vertical",
+				HorizontalAlignment = "Center",
 			}),
 		})
 
@@ -5671,7 +5754,7 @@ __modules["src/elements/Customize.lua"] = function(require)
 			BackgroundColor3 = Color3.fromRGB(12, 13, 18),
 			BorderSizePixel = 0,
 			ClipsDescendants = true,
-			Parent = Frame.UIElements.Container,
+			Parent = body,
 		}, {
 			New("UICorner", { CornerRadius = corner }),
 			New("UIGradient", {
@@ -5689,7 +5772,7 @@ __modules["src/elements/Customize.lua"] = function(require)
 		camera.FieldOfView = 26
 		camera.Parent = stage
 
-		local viewport = New("ViewportFrame", {
+		New("ViewportFrame", {
 			Name = "Viewport",
 			Size = UDim2.new(1, 0, 1, 0),
 			BackgroundTransparency = 1,
@@ -5707,6 +5790,15 @@ __modules["src/elements/Customize.lua"] = function(require)
 			Size = UDim2.new(1, 0, 1, 0),
 			BackgroundTransparency = 1,
 			Parent = stage,
+		})
+
+		local fill = New("Frame", {
+			Name = "Fill",
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Visible = false,
+			Parent = overlay,
 		})
 
 		local edges = {}
@@ -5730,6 +5822,32 @@ __modules["src/elements/Customize.lua"] = function(require)
 				Parent = overlay,
 			})
 		end
+
+		local healthBack = New("Frame", {
+			Name = "HealthBack",
+			BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+			BackgroundTransparency = 0.55,
+			BorderSizePixel = 0,
+			Visible = false,
+			Parent = overlay,
+		})
+		local healthFill = New("Frame", {
+			Name = "HealthFill",
+			BackgroundColor3 = Color3.fromRGB(88, 214, 122),
+			BorderSizePixel = 0,
+			Visible = false,
+			Parent = overlay,
+		})
+
+		local tracer = New("Frame", {
+			Name = "Tracer",
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			BackgroundTransparency = 0.25,
+			BorderSizePixel = 0,
+			Visible = false,
+			Parent = overlay,
+		})
 
 		local nameLabel = New("TextLabel", {
 			Name = "Name",
@@ -5757,6 +5875,39 @@ __modules["src/elements/Customize.lua"] = function(require)
 			Parent = overlay,
 		})
 
+		local function makeHandle(name)
+			local button = New("TextButton", {
+				Name = name,
+				BackgroundTransparency = 1,
+				Text = "",
+				AutoButtonColor = false,
+				Visible = false,
+				Parent = overlay,
+			}, {
+				New("UICorner", { CornerRadius = UDim.new(0, 3) }),
+				New("UIStroke", {
+					Color = HINT,
+					Thickness = 1,
+					Transparency = 1,
+					ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				}),
+			})
+			local stroke = button:FindFirstChildOfClass("UIStroke")
+			button.MouseEnter:Connect(function()
+				if not Customize.Dead then
+					stroke.Transparency = 0.25
+				end
+			end)
+			button.MouseLeave:Connect(function()
+				stroke.Transparency = 1
+			end)
+			return button, stroke
+		end
+
+		local boxHandle = makeHandle("BoxHandle")
+		local nameHandle = makeHandle("NameHandle")
+		local distanceHandle = makeHandle("DistanceHandle")
+
 		-- Cursor mode gets its own centred stage: the guides stay upright while
 		-- the artwork spins inside them.
 		local cursorStage = New("Frame", {
@@ -5768,7 +5919,7 @@ __modules["src/elements/Customize.lua"] = function(require)
 			Visible = false,
 			Parent = stage,
 		})
-		local guideH = New("Frame", {
+		New("Frame", {
 			Name = "GuideH",
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = UDim2.fromScale(0.5, 0.5),
@@ -5778,7 +5929,7 @@ __modules["src/elements/Customize.lua"] = function(require)
 			BorderSizePixel = 0,
 			Parent = cursorStage,
 		})
-		local guideV = New("Frame", {
+		New("Frame", {
 			Name = "GuideV",
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = UDim2.fromScale(0.5, 0.5),
@@ -5795,7 +5946,61 @@ __modules["src/elements/Customize.lua"] = function(require)
 			BackgroundTransparency = 1,
 			Parent = cursorStage,
 		})
+		local cursorHandle = New("TextButton", {
+			Name = "CursorHandle",
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			BackgroundTransparency = 1,
+			Text = "",
+			AutoButtonColor = false,
+			Parent = cursorStage,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 4) }),
+			New("UIStroke", {
+				Color = HINT,
+				Thickness = 1,
+				Transparency = 0.55,
+				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			}),
+		})
 
+		-- ============================================================ footer
+		local footer = New("Frame", {
+			Name = "Footer",
+			Size = UDim2.new(1, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Parent = body,
+		})
+		local hint = New("TextLabel", {
+			Name = "Hint",
+			Size = UDim2.new(1, -60, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "Drag the box or the text",
+			TextColor3 = Color3.new(1, 1, 1),
+			TextTransparency = 0.55,
+			TextSize = 11,
+			FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = footer,
+		})
+		local reset = New("TextButton", {
+			Name = "Reset",
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.fromScale(1, 0.5),
+			Size = UDim2.fromOffset(56, 18),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			BackgroundTransparency = 0.9,
+			Text = "Reset",
+			TextColor3 = Color3.new(1, 1, 1),
+			TextSize = 11,
+			FontFace = Font.new(Creator.Font, Enum.FontWeight.SemiBold),
+			AutoButtonColor = false,
+			Parent = footer,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 6) }),
+		})
+
+		-- ============================================================= modes
 		local pills = {}
 
 		local function paintPills()
@@ -5811,16 +6016,15 @@ __modules["src/elements/Customize.lua"] = function(require)
 			paintPills()
 			overlay.Visible = Customize.Mode == "ESP"
 			cursorStage.Visible = Customize.Mode == "Cursor"
-			if Customize.Mode == "Cursor" then
-				Customize:Refresh()
-			end
+			hint.Text = Customize.Mode == "Cursor" and "Drag the cursor" or "Drag the box or the text"
+			Customize:Refresh()
 		end
 
 		for _, mode in ipairs({ "ESP", "Cursor" }) do
 			pills[mode] = New("TextButton", {
 				Name = mode,
 				Text = mode,
-				Size = UDim2.fromOffset(62, 22),
+				Size = UDim2.fromOffset(58, 22),
 				BackgroundColor3 = Color3.new(1, 1, 1),
 				BackgroundTransparency = 0.9,
 				TextColor3 = Color3.new(1, 1, 1),
@@ -5836,6 +6040,29 @@ __modules["src/elements/Customize.lua"] = function(require)
 			end)
 		end
 
+		local function paintChevron()
+			local open = Customize.Open
+			chevronBars[1].Rotation = open and -45 or 45
+			chevronBars[2].Rotation = open and 45 or -45
+			chevronBars[1].Position = UDim2.fromScale(open and 0.5 or 0.38, 0.5)
+			chevronBars[2].Position = UDim2.fromScale(open and 0.5 or 0.62, 0.5)
+		end
+
+		local function setOpen(open)
+			Customize.Open = open == true
+			body.Visible = Customize.Open
+			paintChevron()
+			return Customize
+		end
+
+		hit.MouseButton1Click:Connect(function()
+			setOpen(not Customize.Open)
+		end)
+		chevron.MouseButton1Click:Connect(function()
+			setOpen(not Customize.Open)
+		end)
+
+		-- ======================================================== projection
 		-- Manual projection: ViewportFrame cameras do not report a viewport
 		-- size, so the box maths run off the frame's own absolute size.
 		local function project(worldPosition)
@@ -5861,98 +6088,197 @@ __modules["src/elements/Customize.lua"] = function(require)
 			frame.Visible = true
 		end
 
-		local function drawESP()
-			local style = Customize.ESP
-			local top = project(Vector3.new(0, HEAD_TOP_Y, 0))
-			local bottom = project(Vector3.new(0, FEET_Y, 0))
-			local leftShoulder = project(Vector3.new(-SHOULDER_X, 2.75, 0))
-			local rightShoulder = project(Vector3.new(SHOULDER_X, 2.75, 0))
-
+		local function hideESP()
+			fill.Visible = false
 			for _, frame in ipairs(edges) do
 				frame.Visible = false
 			end
 			for _, frame in ipairs(brackets) do
 				frame.Visible = false
 			end
+			healthBack.Visible = false
+			healthFill.Visible = false
+			tracer.Visible = false
 			nameLabel.Visible = false
 			distanceLabel.Visible = false
+			boxHandle.Visible = false
+			nameHandle.Visible = false
+			distanceHandle.Visible = false
+		end
 
-			if not (top and bottom and leftShoulder and rightShoulder) then
+		local function drawESP()
+			local style = Customize.ESP
+			hideESP()
+
+			local top = project(Vector3.new(0, HEAD_TOP_Y, 0))
+			local bottom = project(Vector3.new(0, FEET_Y, 0))
+			if not (top and bottom) then
 				return
 			end
-			if bottom.Y - top.Y < 8 then
+
+			local scale = style.Scale or 1
+			local height = (bottom.Y - top.Y) * scale
+			if height < 8 then
 				return
 			end
 
-			local height = bottom.Y - top.Y
-			local shoulderSpan = math.abs(rightShoulder.X - leftShoulder.X)
-			local width = math.max(shoulderSpan, height * 0.34)
-			local centerX = (leftShoulder.X + rightShoulder.X) * 0.5
-			local left = centerX - width * 0.5
-			local right = centerX + width * 0.5
+			local width = height * Customize.Aspect
+			local boxOffset = style.BoxOffset or Vector2.new(0, 0)
+			local centreX = (top.X + bottom.X) * 0.5 + boxOffset.X
+			local centreY = (top.Y + bottom.Y) * 0.5 + boxOffset.Y
+			local left = centreX - width * 0.5
+			local right = centreX + width * 0.5
+			local topY = centreY - height * 0.5
+			local bottomY = centreY + height * 0.5
+			local color = style.BoxColor
 
 			if style.Box then
-				local thickness = 1
-				for _, frame in ipairs(edges) do
-					frame.BackgroundColor3 = style.BoxColor
-					frame.BackgroundTransparency = 0.12
-				end
-				place(edges[1], Vector2.new(left, top.Y), Vector2.new(width, thickness))
-				place(edges[2], Vector2.new(left, bottom.Y - thickness), Vector2.new(width, thickness))
-				place(edges[3], Vector2.new(left, top.Y), Vector2.new(thickness, height))
-				place(edges[4], Vector2.new(right - thickness, top.Y), Vector2.new(thickness, height))
+				local thickness = math.clamp(style.Thickness or 1, 1, 4)
+				local fillAlpha = style.Fill or 0
 
-				local armX = math.clamp(width * 0.22, 6, 18)
-				local armY = math.clamp(height * 0.13, 6, 18)
-				local bar = 2
-				for _, frame in ipairs(brackets) do
-					frame.BackgroundColor3 = style.BoxColor
-					frame.BackgroundTransparency = 0
+				if fillAlpha > 0 then
+					fill.BackgroundColor3 = color
+					fill.BackgroundTransparency = 1 - fillAlpha
+					place(fill, Vector2.new(left, topY), Vector2.new(width, height))
 				end
-				place(brackets[1], Vector2.new(left, top.Y), Vector2.new(armX, bar))
-				place(brackets[2], Vector2.new(left, top.Y), Vector2.new(bar, armY))
-				place(brackets[3], Vector2.new(right - armX, top.Y), Vector2.new(armX, bar))
-				place(brackets[4], Vector2.new(right - bar, top.Y), Vector2.new(bar, armY))
-				place(brackets[5], Vector2.new(left, bottom.Y - bar), Vector2.new(armX, bar))
-				place(brackets[6], Vector2.new(left, bottom.Y - armY), Vector2.new(bar, armY))
-				place(brackets[7], Vector2.new(right - armX, bottom.Y - bar), Vector2.new(armX, bar))
-				place(brackets[8], Vector2.new(right - bar, bottom.Y - armY), Vector2.new(bar, armY))
+
+				for _, frame in ipairs(edges) do
+					frame.BackgroundColor3 = color
+					frame.BackgroundTransparency = 0.1
+				end
+				place(edges[1], Vector2.new(left, topY), Vector2.new(width, thickness))
+				place(edges[2], Vector2.new(left, bottomY - thickness), Vector2.new(width, thickness))
+				place(edges[3], Vector2.new(left, topY), Vector2.new(thickness, height))
+				place(edges[4], Vector2.new(right - thickness, topY), Vector2.new(thickness, height))
+
+				if style.Brackets then
+					local armX = math.clamp(width * 0.22, 6, 18)
+					local armY = math.clamp(height * 0.13, 6, 18)
+					local bar = thickness + 1
+					for _, frame in ipairs(brackets) do
+						frame.BackgroundColor3 = color
+						frame.BackgroundTransparency = 0
+					end
+					place(brackets[1], Vector2.new(left, topY), Vector2.new(armX, bar))
+					place(brackets[2], Vector2.new(left, topY), Vector2.new(bar, armY))
+					place(brackets[3], Vector2.new(right - armX, topY), Vector2.new(armX, bar))
+					place(brackets[4], Vector2.new(right - bar, topY), Vector2.new(bar, armY))
+					place(brackets[5], Vector2.new(left, bottomY - bar), Vector2.new(armX, bar))
+					place(brackets[6], Vector2.new(left, bottomY - armY), Vector2.new(bar, armY))
+					place(brackets[7], Vector2.new(right - armX, bottomY - bar), Vector2.new(armX, bar))
+					place(brackets[8], Vector2.new(right - bar, bottomY - armY), Vector2.new(bar, armY))
+				end
+
+				boxHandle.Position = UDim2.fromOffset(left - 2, topY - 2)
+				boxHandle.Size = UDim2.fromOffset(width + 4, height + 4)
+				boxHandle.Visible = true
 			end
 
-			local labelWidth = math.max(width, 96)
-			local below = style.TextSide == "Below"
+			if style.Health then
+				local barWidth = math.clamp(math.floor(width * 0.05 + 0.5), 2, 4)
+				local barX = left - barWidth - 3
+				healthBack.Position = UDim2.fromOffset(barX, topY)
+				healthBack.Size = UDim2.fromOffset(barWidth, height)
+				healthBack.Visible = true
+				healthFill.Position = UDim2.fromOffset(barX, topY + height * 0.28)
+				healthFill.Size = UDim2.fromOffset(barWidth, height * 0.72)
+				healthFill.Visible = true
+			end
 
-			nameLabel.TextSize = style.TextSize
-			distanceLabel.TextSize = math.max(9, style.TextSize - 2)
+			if style.Tracer then
+				local origin = Vector2.new(stage.AbsoluteSize.X * 0.5, stage.AbsoluteSize.Y)
+				local target = Vector2.new(centreX, bottomY)
+				local dx, dy = target.X - origin.X, target.Y - origin.Y
+				tracer.BackgroundColor3 = color
+				tracer.Position = UDim2.fromOffset(origin.X, origin.Y)
+				tracer.Size = UDim2.fromOffset(math.sqrt(dx * dx + dy * dy), 1)
+				tracer.Rotation = math.deg(math.atan2(dy, dx))
+				tracer.Visible = true
+			end
+
+			local below = style.TextSide == "Below"
+			local textSize = style.TextSize
+			local labelWidth = math.max(width, 100)
+			local nameOffset = style.NameOffset or Vector2.new(0, 0)
+			local distanceOffset = style.DistanceOffset or Vector2.new(0, 0)
+			local nameY = below and (bottomY + textSize + 8) or (topY - textSize - 4)
+			local distanceY = below and (bottomY + 2) or (topY - textSize * 2 - 8)
+
+			nameLabel.TextSize = textSize
+			distanceLabel.TextSize = math.max(9, textSize - 2)
 
 			if style.Name then
 				nameLabel.TextColor3 = style.NameColor
-				local y = below and (bottom.Y + 2) or (top.Y - style.TextSize - 4)
-				place(nameLabel, Vector2.new(centerX - labelWidth * 0.5, y), Vector2.new(labelWidth, style.TextSize + 4))
+				place(
+					nameLabel,
+					Vector2.new(centreX - labelWidth * 0.5 + nameOffset.X, nameY + nameOffset.Y),
+					Vector2.new(labelWidth, textSize + 4)
+				)
+				nameHandle.Position = nameLabel.Position
+				nameHandle.Size = nameLabel.Size
+				nameHandle.Visible = true
 			end
 
 			if style.Distance then
 				distanceLabel.TextColor3 = style.NameColor
-				local y
-				if below then
-					y = bottom.Y + style.TextSize + 5
-				else
-					y = top.Y - 2
-				end
 				place(
 					distanceLabel,
-					Vector2.new(centerX - labelWidth * 0.5, y),
-					Vector2.new(labelWidth, math.max(9, style.TextSize - 2) + 2)
+					Vector2.new(centreX - labelWidth * 0.5 + distanceOffset.X, distanceY + distanceOffset.Y),
+					Vector2.new(labelWidth, math.max(9, textSize - 2) + 2)
 				)
+				distanceHandle.Position = distanceLabel.Position
+				distanceHandle.Size = distanceLabel.Size
+				distanceHandle.Visible = true
 			end
 		end
 
+		-- ============================================================== drag
+		local drag = nil
+
+		local function beginDrag(kind, key, handle)
+			handle.MouseButton1Down:Connect(function()
+				local source = kind == "ESP" and Customize.ESP or Customize.Cursor
+				drag = {
+					kind = kind,
+					key = key,
+					startMouse = UserInputService:GetMouseLocation(),
+					startOffset = source[key] or Vector2.new(0, 0),
+				}
+			end)
+		end
+
+		beginDrag("ESP", "BoxOffset", boxHandle)
+		beginDrag("ESP", "NameOffset", nameHandle)
+		beginDrag("ESP", "DistanceOffset", distanceHandle)
+		beginDrag("Cursor", "Offset", cursorHandle)
+
+		UserInputService.InputEnded:Connect(function(input, processed)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				drag = nil
+			end
+		end)
+
+		reset.MouseButton1Click:Connect(function()
+			if Customize.Mode == "Cursor" then
+				Customize.Cursor.Offset = Vector2.new(0, 0)
+				if type(Customize.OnChange) == "function" then
+					pcall(Customize.OnChange, "Cursor", "Offset", Customize.Cursor.Offset)
+				end
+			else
+				for _, key in ipairs({ "BoxOffset", "NameOffset", "DistanceOffset" }) do
+					Customize.ESP[key] = Vector2.new(0, 0)
+					if type(Customize.OnChange) == "function" then
+						pcall(Customize.OnChange, "ESP", key, Customize.ESP[key])
+					end
+				end
+			end
+			Customize:Refresh()
+		end)
+
+		-- ============================================================ public
 		function Customize:SetESP(style)
 			for key, value in next, style or {} do
 				self.ESP[key] = value
-			end
-			if self.Mode == "ESP" then
-				drawESP()
 			end
 			return self
 		end
@@ -5961,9 +6287,7 @@ __modules["src/elements/Customize.lua"] = function(require)
 			for key, value in next, state or {} do
 				self.Cursor[key] = value
 			end
-			if self.Mode == "Cursor" then
-				self:Refresh()
-			end
+			self:Refresh()
 			return self
 		end
 
@@ -5971,8 +6295,12 @@ __modules["src/elements/Customize.lua"] = function(require)
 		-- frame instead of copying the stroke list.
 		function Customize:Refresh()
 			cursorLayer:ClearAllChildren()
-			local size = math.clamp(self.Cursor.Size, 18, 110)
+			local size = math.clamp(self.Cursor.Size, 16, 110)
+			local offset = self.Cursor.Offset or Vector2.new(0, 0)
 			cursorLayer.Size = UDim2.fromOffset(size, size)
+			cursorLayer.Position = UDim2.fromScale(0.5, 0.5) + UDim2.fromOffset(offset.X, offset.Y)
+			cursorHandle.Position = cursorLayer.Position
+			cursorHandle.Size = UDim2.fromOffset(size + 16, size + 16)
 			if type(self.CursorDraw) == "function" then
 				pcall(self.CursorDraw, cursorLayer, self.Cursor, size)
 			else
@@ -5993,6 +6321,10 @@ __modules["src/elements/Customize.lua"] = function(require)
 			return self
 		end
 
+		function Customize:SetOpen(open)
+			return setOpen(open)
+		end
+
 		local connection
 		connection = RunService.RenderStepped:Connect(function(delta)
 			if Customize.Dead or not stage.Parent then
@@ -6005,6 +6337,20 @@ __modules["src/elements/Customize.lua"] = function(require)
 			local radius = 14
 			local eye = target + Vector3.new(math.sin(Customize.Angle) * radius, 1.1, math.cos(Customize.Angle) * radius)
 			camera.CFrame = CFrame.lookAt(eye, target)
+
+			if drag then
+				local source = drag.kind == "ESP" and Customize.ESP or Customize.Cursor
+				local at = UserInputService:GetMouseLocation()
+				local delta2 = at - drag.startMouse
+				local offset = Vector2.new(
+					math.clamp(drag.startOffset.X + delta2.X, -DRAG_LIMIT, DRAG_LIMIT),
+					math.clamp(drag.startOffset.Y + delta2.Y, -DRAG_LIMIT, DRAG_LIMIT)
+				)
+				source[drag.key] = offset
+				if type(Customize.OnChange) == "function" then
+					pcall(Customize.OnChange, drag.kind, drag.key, offset)
+				end
+			end
 
 			if Customize.Mode == "Cursor" then
 				if Customize.Cursor.Spin then
@@ -6024,6 +6370,8 @@ __modules["src/elements/Customize.lua"] = function(require)
 		end)
 
 		setMode(Customize.Mode)
+		paintChevron()
+		setOpen(Customize.Open)
 		Customize:Refresh()
 
 		return Customize.__type, Customize
@@ -6031,7 +6379,6 @@ __modules["src/elements/Customize.lua"] = function(require)
 
 	return Element
 end
-
 __modules["src/elements/Viewport.lua"] = function(require)
 local cloneref = (cloneref or clonereference or function(instance)
 	return instance
@@ -36275,7 +36622,7 @@ end
 return DynamicShapeModule
 end
 
--- enderhub-windui-mac-chrome29
+-- enderhub-windui-mac-chrome30
 return __require("src/Init.lua")
 
 ]==]
