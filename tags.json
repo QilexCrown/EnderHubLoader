@@ -1,12 +1,4 @@
 {
-  "ranks": {
-    "casualjoker392": "Owner"
-  },
-  "colors": {
-    "Owner": "#FFFFFF",
-    "Developer": "#7CFC7C",
-    "Admin": "#FF6B6B",
-    "Staff": "#8AB4FF",
-    "Tester": "#FFC857"
-  }
+  "data": "eyJyYW5rcyI6eyJjYXN1YWxqb2tlcjM5MiI6Ik93bmVyIn0sImNvbG9ycyI6eyJPd25lciI6IiNGRkZGRkYiLCJEZXZlbG9wZXIiOiIjN0NGQzdDIiwiQWRtaW4iOiIjRkY2QjZCIiwiU3RhZmYiOiIjOEFCNEZGIiwiVGVzdGVyIjoiI0ZGQzg1NyJ9fQ==",
+  "sig": "FtLPMKA2b8CNoJ73Wc63NmBK4n3oSzSPCL/zuK0Tw+o+gE0cVnYJG367EvcQ2CyQgYMcbygAC4dvGAwF5vdfZWO1LErQGxtsL71YrsOcfleIS8wdT5S/zwo/5SDGlHmCvUTkMfqQxD3VK6r2yqp9Acwcd+oDEPWuKzjKoKjnmOhqzNnAqDLj+0Q+fMwldvNVP7nazp+80bsbwfVLkOusc0tZMPcN1fHtkH2xKTrHGxQAEfPfBEYQF6JvPbufC5g1RocWQ5g6VVNOS6w9t+fMAx8Cx2Ox7hGut3NXhaPs7seKl4EyhVMu0gXFiancW0X6LvmUs5rE7VyqIaX+wf7UNw=="
 }
