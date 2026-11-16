@@ -1,0 +1,12 @@
+{
+  "ranks": {
+    "casualjoker392": "Owner"
+  },
+  "colors": {
+    "Owner": "#FFFFFF",
+    "Developer": "#7CFC7C",
+    "Admin": "#FF6B6B",
+    "Staff": "#8AB4FF",
+    "Tester": "#FFC857"
+  }
+}
