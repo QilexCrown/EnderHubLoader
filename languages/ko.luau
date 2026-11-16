@@ -593,4 +593,9 @@ return {
     WORLD_RATIO_X = "비율 X",
     WORLD_RATIO_Y = "비율 Y",
     WORLD_RESET = "월드 초기화",
+    LOADING_STAGE = "로딩 중: %s",
+    UI_WORD = "UI",
+    WINDOW_WORD = "창",
+    WIRING_SERVICES = "서비스 연결 중",
+    WAITING_FOR_KEY = "키 대기 중",
 }

@@ -593,4 +593,9 @@ return {
     WORLD_RATIO_X = "Ratio X",
     WORLD_RATIO_Y = "Ratio Y",
     WORLD_RESET = "Reset world",
+    LOADING_STAGE = "Loading %s",
+    UI_WORD = "UI",
+    WINDOW_WORD = "Window",
+    WIRING_SERVICES = "Wiring services",
+    WAITING_FOR_KEY = "Waiting for key",
 }

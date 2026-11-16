@@ -593,4 +593,9 @@ return {
     WORLD_RATIO_X = "比率 X",
     WORLD_RATIO_Y = "比率 Y",
     WORLD_RESET = "ワールドをリセット",
+    LOADING_STAGE = "読み込み中: %s",
+    UI_WORD = "UI",
+    WINDOW_WORD = "ウィンドウ",
+    WIRING_SERVICES = "サービスを接続中",
+    WAITING_FOR_KEY = "キーを待機中",
 }
