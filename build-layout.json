@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "referenceRepository": "QilexCrown/EnderHubLoader",
-  "referenceRuntimeCommit": "e142170886887f45f99e8a17252103b87ee4fda3",
-  "referenceLoaderSha256": "5d72a5b98c086f63299f875f88a38800f7ef697d852bcb529f8f82e43658e092",
+  "referenceRuntimeCommit": "97b1365b419b371a15c6b608c58aac245ec19764",
+  "referenceLoaderSha256": "18bf8b0d2f36262bb116bc3a6cd0d703e75866a2cd750a9a7796664b72c5cb9a",
   "runtimePaths": [
     "EnderApi.luau",
     "Main.luau",
@@ -55,15 +55,17 @@
     "scripts",
     "settings"
   ],
-  "releaseVersion": "2.8.2",
-  "winduiCommit": "42ec7275bab786f19079ba5377daf3bef9c50fea",
-  "winduiBundleSha256": "adb9bd8e29fb368be59d2650b6b6146f9e0b49de399afe05cb9bb44c97fcc5ea",
+  "releaseVersion": "2.8.3",
+  "winduiCommit": "4d56614d499af2a43645a70830177f2217744354",
+  "winduiBundleSha256": "cb38dc446cafd0f9a67b85223baf03d25514a11eb10a5d52ff561fc9ad2d4086",
   "protectedArtifacts": {
-    "loader.luau": "5d72a5b98c086f63299f875f88a38800f7ef697d852bcb529f8f82e43658e092",
-    "src/Main.luau": "0b4c3f1ef95de4a2864fa1e4be6e6816519aba0f809a84d0ded6c611870ec812",
-    "Main.luau": "a13a5f5b74c84d8e3a0a893a074e8fc90057f109afe9b46566c8fbc72b7cb212",
+    "loader.luau": "18bf8b0d2f36262bb116bc3a6cd0d703e75866a2cd750a9a7796664b72c5cb9a",
+    "src/Main.luau": "acd17308d3e28be20ac67276626d48130d9ea9daf9a4aa997a63c32b90028eec",
+    "Main.luau": "519937798b5b5e526525f65bcb6cd599e2a2f2da62b83f18ac8756e9ccc89173",
     "src/tabs/info.luau": "ebd82bc4bd3e38109a3f97c59c203a6b4d4fb87b4f1c5b542dcf441cf97c22e1",
-    "EnderApi.luau": "6395e266688aa05b5ffea999f2507eac7aa6e8edc749addccf10d187fe7d4b43",
-    "src/tabs/main.luau": "daf025703e88009657d8f5fd1f744fcd730a19e4aa9ea4ecab92d9b4df82c92a"
+    "EnderApi.luau": "8bccf85227daf1f1ff5552cef9fd8744b8d72394da746974ecfa2296fcef3657",
+    "src/tabs/main.luau": "c3a9fd9af2c3fdb137b384894ecebe4cea67811040d3e6d7f9032c48565a29fb",
+    "src/tabs/settings.luau": "043a51bfc94bf3457eaec1d43e6e16b0d3e10ee3ac0d6afeb0932224d7c45a58",
+    "src/tabs/esp.luau": "d3999798c3ad8674872284ca488c0d35f597a536d37c24683a0e30317bc09e4f"
   }
 }
