@@ -52,3 +52,12 @@ WindUI element surfaces, theme colors, typography and rounded corners. Statistic
 use a compact icon-and-text row. The updated hub runtime and Info template were
 processed with the private Krypt checkout; the private implementation is not
 included here. The embedded library is the tested WindUI fork build.
+
+## 2.7.5 — shared glass and motion
+
+The embedded WindUI fork now supplies static liquid-glass highlights on native
+surfaces and managed, cancellable control transitions. Reduced-motion and glass
+switches are available through `WindUI:SetEffects`. Layouts and control APIs stay
+compatible. Private Krypt still produces the protected runtime.
+
+Rollback baseline: `c767ed1`; local branch `backup/pre-liquid-glass-20261119`.
