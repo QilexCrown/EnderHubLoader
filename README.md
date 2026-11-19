@@ -1,5 +1,9 @@
 # Ender Hub Loader
 
+## 2.8.1 — Main layout
+
+Main uses full-width FPS controls with separate, mutually exclusive limit and unlimited switches. Inspectors use the World-style Block/Boombox segmented card. Block details include username, display name, observed server status and adjacent copy actions. Boombox includes audio-ID copy and local Play/Pause/Stop preview. Only the Main introduction section has a description. Existing consent and local-only public chat remain in place.
+
 ## 2.8.0 — Main and startup consent
 
 Main now contains FPS controls (unlimited by default when supported), block and boombox inspector cards with copy actions and outlines, a local public-chat view, and reversible local name masking.
