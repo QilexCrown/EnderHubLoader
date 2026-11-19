@@ -45,6 +45,13 @@ source are not included in this distribution. Repository visibility is unchanged
 Ender Hub is licensed software. Access requires a key bound to the executor's
 hardware id; the key tab handles redemption and plan display.
 
+## 2.7.6 — iOS 26 inspired navigation
+
+The protected full hub includes the fork's translucent toolbar, responsive status
+capsules, softer continuous corners and finite press/page motion. The native Info
+layout remains integrated. The library uses Roblox UI surfaces to approximate the
+material, with no persistent render loop added for the new effects.
+
 ## 2.7.4 — Info styling
 
 The welcome card, credits and right-side feedback shortcut now follow the native
