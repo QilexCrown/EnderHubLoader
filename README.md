@@ -1,5 +1,11 @@
 # Ender Hub Loader
 
+## 2.8.3 — Native glass controls
+
+Main remains design-only and uses shared glass action/segment controls within native VStack/HStack cards. Info Rejoin and Server Hop use the same controls. The collapsed sidebar uses finite fade/slide/hover/selection motion, handles sparse tab indices and includes the existing visual tab as an eye icon. Visuals controls are unchanged.
+
+The Main consent card is removed; functional withdrawal is in Settings. Startup consent and data-collection guards remain active until the owner implements a replacement. Glass is a native UI material approximation, not scene refraction. No feature logic, new collection or private-chat access was added.
+
 ## 2.8.2 — Main design only
 
 The Main feature implementation has been removed at the project owner's request. Main now contains only layout, native controls, placeholders and inspector segment navigation. FPS, object inspection/highlighting, profile lookup, clipboard, audio, chat subscriptions and name masking are not connected. All feature switches default off. UI handles are available as `HX.MainUI`; see `docs/MAIN-UI.md` in the readable source checkout. Existing consent and withdrawal safeguards remain operational. Other tabs and the accepted sidebar rail are unchanged.
