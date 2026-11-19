@@ -34,9 +34,8 @@ matching runtime paths and loader-named tab sources. Its build inlines tab bodie
 to preserve shared lexical state; the protected release stays executable as
 shipped. Layout synchronization does not publish readable source here.
 
-The contract pins the existing loader checksum and reference runtime commit so
-future updates can verify they follow an intentional release change. This layout
-alignment does not rebuild or alter any shipped Luau in this repository.
+The contract pins the loader checksum and reference runtime commit so future
+updates can verify they follow an intentional release change.
 
 Krypt remains private. Its implementation, credentials, and readable Ender Hub
 source are not included in this distribution. Repository visibility is unchanged.
@@ -45,3 +44,11 @@ source are not included in this distribution. Repository visibility is unchanged
 
 Ender Hub is licensed software. Access requires a key bound to the executor's
 hardware id; the key tab handles redemption and plan display.
+
+## 2.7.4 — Info styling
+
+The welcome card, credits and right-side feedback shortcut now follow the native
+WindUI element surfaces, theme colors, typography and rounded corners. Statistics
+use a compact icon-and-text row. The updated hub runtime and Info template were
+processed with the private Krypt checkout; the private implementation is not
+included here. The embedded library is the tested WindUI fork build.
