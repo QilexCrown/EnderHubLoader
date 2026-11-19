@@ -1,5 +1,15 @@
 # Ender Hub Loader
 
+## 2.8.0 — Main and startup consent
+
+Main now contains FPS controls (unlimited by default when supported), block and boombox inspector cards with copy actions and outlines, a local public-chat view, and reversible local name masking.
+
+Startup requires explicit consent before IP/device/profile collection or API requests. Decline or dismiss stops startup. Approval is per execution; saved settings and environment flags cannot approve it. Main includes Withdraw consent & close. The standalone API has a visible Stop Collection button. Withdrawal stops future collection; it does not delete records already sent.
+
+Chat forwarding is removed from both API implementations. The chat view only displays delivered RBXGeneral messages locally. Local name masking does not change IP or HWID. No fake anti-grabber, IP/HWID spoofing or covert whisper controls are included.
+
+Collection destinations: https://ehubdiscordbot.onrender.com and fallback https://ehub-bot.onrender.com; HTTPS IP lookup via https://api.ipify.org. A configured API override is displayed in the consent prompt instead. The prompt lists profile, hardware/device identifier, IP, license key, server, executor/platform and session/performance fields.
+
 Krypt-protected release distribution for Ender Hub. This repository is the layout
 and runtime reference for `QilexCrown/Ender-Hub-source`, the readable source
 counterpart. The source repository follows this release, not the other way around.
