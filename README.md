@@ -1,5 +1,9 @@
 # Ender Hub Loader
 
+## 2.8.2 — Main design only
+
+The Main feature implementation has been removed at the project owner's request. Main now contains only layout, native controls, placeholders and inspector segment navigation. FPS, object inspection/highlighting, profile lookup, clipboard, audio, chat subscriptions and name masking are not connected. All feature switches default off. UI handles are available as `HX.MainUI`; see `docs/MAIN-UI.md` in the readable source checkout. Existing consent and withdrawal safeguards remain operational. Other tabs and the accepted sidebar rail are unchanged.
+
 ## 2.8.1 — Main layout
 
 Main uses full-width FPS controls with separate, mutually exclusive limit and unlimited switches. Inspectors use the World-style Block/Boombox segmented card. Block details include username, display name, observed server status and adjacent copy actions. Boombox includes audio-ID copy and local Play/Pause/Stop preview. Only the Main introduction section has a description. Existing consent and local-only public chat remain in place.
