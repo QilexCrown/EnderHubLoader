@@ -60,7 +60,7 @@ do
     genvEarly.EnderHubRuntime = nil
 end
 
-HX.WINDUI_MARK = "enderhub-windui-mac-chrome49-island-cal"
+HX.WINDUI_MARK = "enderhub-windui-mac-chrome50-calendar"
 
 HX.RAW_BASE = "https://raw.githubusercontent.com/QilexCrown/EnderHubLoader/refs/heads/main/"
 
@@ -450,10 +450,14 @@ if not HX.winduiAlive(runtime.WindUI) then
             return game:HttpGet(HX.WINDUI_URL)
         end)
         if got then
-            module, why = tryBundle(data)
-            if module then
-                HX.bootGenv.EnderHubWindUISource = data
-                HX.storeWindUI(data)
+            if type(data) == "string" and string.find(data, HX.WINDUI_MARK, 1, true) then
+                module, why = tryBundle(data)
+                if module then
+                    HX.bootGenv.EnderHubWindUISource = data
+                    HX.storeWindUI(data)
+                end
+            else
+                why = "network bundle is a different build"
             end
         else
             why = tostring(data)
@@ -1700,6 +1704,7 @@ pcall(function()
         host.ZIndex = 500
     end
 end)
+genvEarly.EnderHubIsland = HX.Island
 
 HX.bootStage("island-ready")
 function HX.islandLoading(label, seconds)
@@ -2097,7 +2102,6 @@ function HX.rsaVerify(payload, signature)
     return string.sub(tail, #DIGEST_INFO + 1) == HX.sha256(payload)
 end
 
-HX.TAG_URL = "https://raw.githubusercontent.com/QilexCrown/EnderHubLoader/main/tags.json"
 HX.TAG_CACHE = "EnderHubTags.json"
 
 HX.TAG_RANKS = {
@@ -2174,13 +2178,6 @@ do
     end
     if type(cached) == "string" and cached ~= "" then
         HX.applyTagData(cached)
-    end
-
-    local response = HX.getTransport(HX.TAG_URL)
-    if type(response) == "table" and type(response.body) == "string" then
-        if HX.applyTagData(response.body) and type(writefile) == "function" then
-            pcall(writefile, HX.TAG_CACHE, response.body)
-        end
     end
 end
 
