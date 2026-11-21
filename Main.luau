@@ -1727,6 +1727,27 @@ function HX.islandProgress(value)
     end))
 end
 
+function HX.bootCard()
+    if HX.Boot then
+        return HX.Boot
+    end
+    local UI = runtime.WindUI
+    if type(UI) ~= "table" or type(UI.Startup) ~= "function" then
+        return nil
+    end
+    local ok, handle = pcall(function()
+        return UI:Startup({
+            Title = "Ender Hub",
+            ReadyText = HX.translate("SCRIPT_LOADED"),
+        })
+    end)
+    if ok and type(handle) == "table" then
+        HX.Boot = handle
+        return handle
+    end
+    return nil
+end
+
 function HX.loadStage(text, ratio)
     pcall(function()
         local root = genvEarly or (getgenv and getgenv()) or _G
@@ -1734,6 +1755,12 @@ function HX.loadStage(text, ratio)
     end)
     local island = HX.Island
     if type(island) ~= "table" then
+        local boot = HX.bootCard()
+        if boot then
+            pcall(function()
+                boot:SetStatus(text, tonumber(ratio) or 0)
+            end)
+        end
         return
     end
     if type(island.SetLoadingLabel) == "function" then
@@ -13474,6 +13501,11 @@ task.delay(0.8, function()
 end)
 task.defer(function()
     HX.bootStage("loaded")
+    if HX.Boot then
+        pcall(function()
+            HX.Boot:Ready()
+        end)
+    end
     print(string.format("EnderHub Loaded (%.2fs)", os.clock() - HX.t0))
 end)
 
