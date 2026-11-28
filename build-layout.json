@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "referenceRepository": "QilexCrown/EnderHubLoader",
   "referenceRuntimeCommit": "275c73373036b9dc0ff4f05293c84c5c182a4fa4",
-  "referenceLoaderSha256": "890cf55e711a7bdd3da4ae62a345a1dd826debcee0e907cc1595d23c11c31dc0",
+  "referenceLoaderSha256": "b448f1bcf852f4008d1956dec1ef41a7955520858edc43251996620e0acd01ff",
   "runtimePaths": [
     "EnderApi.luau",
     "Main.luau",
