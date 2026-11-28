@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "referenceRepository": "QilexCrown/EnderHubLoader",
-  "referenceRuntimeCommit": "62610d17e0267eb5881341357be6b61a21b8e781",
-  "referenceLoaderSha256": "39fd86ea1144d36feacce46023d1e24ccabd27b247b28c1875d80268f9a8011c",
+  "referenceRuntimeCommit": "5869ed8",
+  "referenceLoaderSha256": "58f46743ae98d4956577e49ed6a2da46ecff148817819e08cb99657313b747ac",
   "runtimePaths": [
     "EnderApi.luau",
     "Main.luau",
@@ -59,7 +59,7 @@
   "winduiCommit": "4d56614d499af2a43645a70830177f2217744354",
   "winduiBundleSha256": "9156c917faf212ab3b3548fc37eb76f5ba78fcde2bde2442a9acd0e66d2b8620",
   "protectedArtifacts": {
-    "loader.luau": "39fd86ea1144d36feacce46023d1e24ccabd27b247b28c1875d80268f9a8011c",
+    "loader.luau": "58f46743ae98d4956577e49ed6a2da46ecff148817819e08cb99657313b747ac",
     "src/Main.luau": "1dc543080e85c8365f3df100f0d0801beadeda6ed33877af6d67170fcf579c75",
     "Main.luau": "1dc543080e85c8365f3df100f0d0801beadeda6ed33877af6d67170fcf579c75",
     "src/tabs/info.luau": "ebd82bc4bd3e38109a3f97c59c203a6b4d4fb87b4f1c5b542dcf441cf97c22e1",
